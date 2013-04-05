@@ -80,7 +80,7 @@ bool Sys_GetFileTime(LPCSTR psFileName, FILETIME &ft)
 
 /*
 ==================
-Sys_FileOutOfDate()
+Sys_FileOutOfDate
 ==================
 */
 qboolean Sys_FileOutOfDate( LPCSTR psFinalFileName /* dest */, LPCSTR psDataFileName /* src */ )
@@ -92,7 +92,7 @@ qboolean Sys_FileOutOfDate( LPCSTR psFinalFileName /* dest */, LPCSTR psDataFile
 		// timer res only accurate to within 2 seconds on FAT, so can't do exact compare...
 		//
 		//LONG l = CompareFileTime( &ftFinalFile, &ftDataFile );
-		if (  (abs(ftFinalFile.dwLowDateTime - ftDataFile.dwLowDateTime) <= 20000000 ) &&
+		if (  ( abs( long( ftFinalFile.dwLowDateTime - ftDataFile.dwLowDateTime) ) <= 20000000 ) &&
 				  ftFinalFile.dwHighDateTime == ftDataFile.dwHighDateTime				
 			)
 		{
@@ -117,7 +117,7 @@ qboolean Sys_FileOutOfDate( LPCSTR psFinalFileName /* dest */, LPCSTR psDataFile
 
 /*
 ==================
-Sys_LowPhysicalMemory()
+Sys_CopyFile
 ==================
 */
 qboolean Sys_CopyFile(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, qboolean bOverWrite)
@@ -134,7 +134,7 @@ qboolean Sys_CopyFile(LPCSTR lpExistingFileName, LPCSTR lpNewFileName, qboolean 
 
 /*
 ==================
-Sys_LowPhysicalMemory()
+Sys_LowPhysicalMemory
 ==================
 */
 qboolean Sys_LowPhysicalMemory() 
@@ -475,6 +475,46 @@ void Sys_UnloadGame( void ) {
 
 /*
 =================
+Sys_RetrieveDLL
+
+OpenJK Function.
+Retrieve the DLL using fs_game
+=================
+*/
+
+static HINSTANCE Sys_RetrieveDLL( const char *gamename, const char *debugdir )
+{
+	char	cwd[MAX_OSPATH];
+	char	name[MAX_OSPATH];
+
+	HINSTANCE retVal;
+
+	cvar_t *moddir = Cvar_Get("fs_game", "", CVAR_INIT|CVAR_SERVERINFO);
+
+	// First search path: mod dir, debug/release folders
+	_getcwd(cwd, sizeof(cwd));
+	Com_sprintf(name, sizeof(name), "%s/%s/%s/%s", cwd, moddir->string, debugdir, gamename);
+	retVal = LoadLibrary(name);
+	if(retVal)
+		goto successful;
+
+	// Second search path: mod dir
+	Com_sprintf(name, sizeof(name), "%s/%s/%s", cwd, moddir->string, gamename);
+	retVal = LoadLibrary(name);
+	if(retVal)
+		goto successful;
+
+	// Third/last search path: gamedata folder
+	Com_sprintf(name, sizeof(name), "%s/%s", cwd, gamename);
+	retVal = LoadLibrary(name);
+
+successful:
+	Com_DPrintf("LoadLibrary (%s)\n", name);
+	return retVal;
+}
+
+/*
+=================
 Sys_GetGameAPI
 
 Loads the game dll
@@ -483,8 +523,6 @@ Loads the game dll
 void *Sys_GetGameAPI (void *parms)
 {
 	void	*(*GetGameAPI) (void *);
-	char	name[MAX_OSPATH];
-	char	cwd[MAX_OSPATH];
 #if defined _M_IX86
 	const char *gamename = "jagamex86.dll";
 
@@ -510,31 +548,16 @@ void *Sys_GetGameAPI (void *parms)
 	if (game_library)
 		Com_Error (ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame");
 
-	// check the current debug directory first for development purposes
-	_getcwd (cwd, sizeof(cwd));
-	Com_sprintf (name, sizeof(name), "%s/%s/%s", cwd, debugdir, gamename);
-	game_library = LoadLibrary ( name );
-	if (game_library)
+	game_library = Sys_RetrieveDLL(gamename, debugdir);
+	if(!game_library)
 	{
-		Com_DPrintf ("LoadLibrary (%s)\n", name);
-	}
-	else
-	{
-		// check the current directory for other development purposes
-		Com_sprintf (name, sizeof(name), "%s/%s", cwd, gamename);
-		game_library = LoadLibrary ( name );
-		if (game_library)
-		{
-			Com_DPrintf ("LoadLibrary (%s)\n", name);
-		} else {
-			char *buf;
+		char *buf;
 
-			FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &buf, 0, NULL );
+		FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &buf, 0, NULL );
 
-			Com_Printf( "LoadLibrary(\"%s\") failed\n", name);
-			Com_Printf( "...reason: '%s'\n", buf );
-			Com_Error( ERR_FATAL, "Couldn't load game" );
-		}
+		Com_Printf( "LoadLibrary(\"%s\") failed\n", gamename);
+		Com_Printf( "...reason: '%s'\n", buf );
+		Com_Error( ERR_FATAL, "Couldn't load game" );
 	}
 
 	GetGameAPI = (void *(*)(void *))GetProcAddress (game_library, "GetGameAPI");
