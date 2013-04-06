@@ -6,79 +6,39 @@ set(InOpenJK TRUE)
 project("OpenJK")
 
 #    Customizable options
-option(InstallDir "Where to install the binaries to" "install")
-option(UseInternalJpeg "Whether to use the included libjpeg instead of a locally installed one" ON)
-option(UseInternalPng "Whether to use the included PNG instead of a locally installed one" ON)
-option(UseInternalZlib "Whether to use the included ZLIB instead of a locally installed one" ON)
+option(InstallDir "Where to install the binaries to" "${CMAKE_SOURCE_DIR}/install")
+option(BuildMPEngine "Whether to create projects for the mp engine (jamp.exe)" ON)
+option(BuildMPDed "Whether to create projects for the dedicated server (jampded.exe)" ON)
+option(BuildMPGame "Whether to create projects for the mp serverside gamecode (jampgamex86.dll)" ON)
+option(BuildMPCGame "Whether to create projects for the mp clientside gamecode (jampcgamex86.dll)" ON)
+option(BuildMPUI "Whether to create projects for the mp ui code (jampuix86.dll)" ON)
+if(WIN32)
+	option(UseInternalOpenAL "Whether to use the included OpenAL instead of a locally installed one" ON)
+endif(WIN32)
+
+# Custom CMake Modules needed
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules" ${CMAKE_MODULE_PATH})
 
 # Binary names
-set(SPBinary "openjksp")
+#set(SPEngine "openjksp")
+set(SPEngine "jasp") #keep this unchanged until we've fixed the bug with the filename-workaround
 set(SPGame "jagame")
 set(SPCGame "jacgame")
-set(MPBinary "openjkmp")
+#set(MPEngine "openjkmp")
+set(MPEngine "jamp") #keep this unchanged until we've fixed the bug with the filename-workaround
 set(MPGame "jampgame")
 set(MPCGame "jampcgame")
+set(MPBotlib "botlib")
 
 # Paths
-set(SPDir "${CMAKE_CURRENT_SOURCE_DIR}/code")
-set(MPDir "${CMAKE_CURRENT_SOURCE_DIR}/codemp")
-set(LibsDir "${CMAKE_CURRENT_SOURCE_DIR}/libs")
-set(JpegDir "${LibsDir}/jpeg-6")
+set(SPDir "${CMAKE_SOURCE_DIR}/code")
+set(MPDir "${CMAKE_SOURCE_DIR}/codemp")
+# shared code between mp and sp
+set(LibsDir "${CMAKE_SOURCE_DIR}/libs")
 set(Mp3Dir "${LibsDir}/mp3code")
 set(PngDir "${LibsDir}/png")
-set(ZlibDir "${LibsDir}/zlib")
-set(Zlib32Dir "${LibsDir}/zlib32")
-
-# Internal JPEG files
-set(JpegFiles
-	"${JpegDir}/jcapimin.cpp"
-	"${JpegDir}/jccoefct.cpp"
-	"${JpegDir}/jccolor.cpp"
-	"${JpegDir}/jcdctmgr.cpp"
-	"${JpegDir}/jchuff.cpp"
-	"${JpegDir}/jchuff.h"
-	"${JpegDir}/jcinit.cpp"
-	"${JpegDir}/jcmainct.cpp"
-	"${JpegDir}/jcmarker.cpp"
-	"${JpegDir}/jcmaster.cpp"
-	"${JpegDir}/jcomapi.cpp"
-	"${JpegDir}/jconfig.h"
-	"${JpegDir}/jcparam.cpp"
-	"${JpegDir}/jcphuff.cpp"
-	"${JpegDir}/jcprepct.cpp"
-	"${JpegDir}/jcsample.cpp"
-	"${JpegDir}/jctrans.cpp"
-	"${JpegDir}/jdapimin.cpp"
-	"${JpegDir}/jdapistd.cpp"
-	"${JpegDir}/jdatadst.cpp"
-	"${JpegDir}/jdatasrc.cpp"
-	"${JpegDir}/jdcoefct.cpp"
-	"${JpegDir}/jdcolor.cpp"
-	"${JpegDir}/jdct.h"
-	"${JpegDir}/jddctmgr.cpp"
-	"${JpegDir}/jdhuff.cpp"
-	"${JpegDir}/jdhuff.h"
-	"${JpegDir}/jdinput.cpp"
-	"${JpegDir}/jdmainct.cpp"
-	"${JpegDir}/jdmarker.cpp"
-	"${JpegDir}/jdmaster.cpp"
-	"${JpegDir}/jdpostct.cpp"
-	"${JpegDir}/jdsample.cpp"
-	"${JpegDir}/jdtrans.cpp"
-	"${JpegDir}/jerror.cpp"
-	"${JpegDir}/jerror.h"
-	"${JpegDir}/jfdctflt.cpp"
-	"${JpegDir}/jidctflt.cpp"
-	"${JpegDir}/jinclude.h"
-	"${JpegDir}/jmemmgr.cpp"
-	"${JpegDir}/jmemnobs.cpp"
-	"${JpegDir}/jmemsys.h"
-	"${JpegDir}/jmorecfg.h"
-	"${JpegDir}/jpegint.h"
-	"${JpegDir}/jpeglib.h"
-	"${JpegDir}/jutils.cpp"
-	"${JpegDir}/jversion.h"
-	)
+set(EaxDir "${LibsDir}/eax")
+set(OpenALDir "${LibsDir}/OpenAL")
 
 set(Mp3Files
 	"${Mp3Dir}/cdct.c"
@@ -113,48 +73,11 @@ set(Mp3Files
 	"${Mp3Dir}/upsf.c"
 	"${Mp3Dir}/wavep.c"
 	)
-
-set(PngFiles
-	"${PngDir}/png.cpp"
-	"${PngDir}/png.h"
-	)
-
-set(ZlibFiles
-	"${ZlibDir}/adler32.c"
-	"${ZlibDir}/compress.c"
-	"${ZlibDir}/crc32.c"
-	"${ZlibDir}/deflate.c"
-	"${ZlibDir}/deflate.h"
-	"${ZlibDir}/infblock.c"
-	"${ZlibDir}/infblock.h"
-	"${ZlibDir}/infcodes.c"
-	"${ZlibDir}/infcodes.h"
-	"${ZlibDir}/inffast.c"
-	"${ZlibDir}/inffast.h"
-	"${ZlibDir}/inffixed.h"
-	"${ZlibDir}/inflate.c"
-	"${ZlibDir}/inftrees.c"
-	"${ZlibDir}/inftrees.h"
-	"${ZlibDir}/infutil.c"
-	"${ZlibDir}/infutil.h"
-	"${ZlibDir}/trees.c"
-	"${ZlibDir}/trees.h"
-	"${ZlibDir}/uncompr.c"
-	"${ZlibDir}/zconf.h"
-	"${ZlibDir}/zlib.h"
-	"${ZlibDir}/zutil.c"
-	"${ZlibDir}/zutil.h"
-	)
-
-set(Zlib32Files
-	"${Zlib32Dir}/deflate.cpp"
-	"${Zlib32Dir}/deflate.h"
-	"${Zlib32Dir}/inflate.cpp"
-	"${Zlib32Dir}/inflate.h"
-	"${Zlib32Dir}/zip.h"
-	"${Zlib32Dir}/zipcommon.cpp"
+set(EaxFiles
+	"${EaxIncludeDir}/eax.h"
+	"${EaxIncludeDir}/EaxMan.h"
 	)
 
 #    Add projects
-# only MP for now
+#add_subdirectory(${SPDir})
 add_subdirectory(${MPDir})

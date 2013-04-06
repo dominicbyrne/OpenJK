@@ -19,9 +19,8 @@ Major contributors, in alphabetical order:
 * OpenGL
 * OpenAL (included on Windows)
 * ALUT (included on Windows)
-* libpng (optional)
-* libjpeg (optional)
-* zlib (included on Windows)
+* libjpeg
+* zlib
 
 ## Changes ##
 
