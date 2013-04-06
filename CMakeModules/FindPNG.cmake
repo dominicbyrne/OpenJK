@@ -49,7 +49,7 @@ if(ZLIB_FOUND)
         if(BUILD_SHARED_LIBS)
            # No need to define PNG_USE_DLL here, because it's default for Cygwin.
         else(BUILD_SHARED_LIBS)
-          SET (PNG_DEFINITIONS -DPNG_STATIC)
+          SET (PNG_DEFINITIONS PNG_STATIC)
         endif(BUILD_SHARED_LIBS)
       endif (CYGWIN)
 
@@ -59,7 +59,7 @@ endif(ZLIB_FOUND)
 
 # handle the QUIETLY and REQUIRED arguments and set PNG_FOUND to TRUE if
 # all listed variables are TRUE
-include(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(PNG  DEFAULT_MSG  PNG_LIBRARY PNG_PNG_INCLUDE_DIR)
 
 mark_as_advanced(PNG_PNG_INCLUDE_DIR PNG_LIBRARY )
