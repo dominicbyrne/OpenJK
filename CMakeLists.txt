@@ -20,12 +20,11 @@ endif(WIN32)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules" ${CMAKE_MODULE_PATH})
 
 # Binary names
-#set(SPEngine "openjksp")
-set(SPEngine "jasp") #keep this unchanged until we've fixed the bug with the filename-workaround
+set(SPEngine "openjksp")
 set(SPGame "jagame")
 set(SPCGame "jacgame")
-#set(MPEngine "openjkmp")
-set(MPEngine "jamp") #keep this unchanged until we've fixed the bug with the filename-workaround
+set(MPEngine "openjkmp")
+set(MPDed "openjkded")
 set(MPGame "jampgame")
 set(MPCGame "jampcgame")
 set(MPBotlib "botlib")

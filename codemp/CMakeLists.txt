@@ -203,7 +203,12 @@ endif(BuildMPEngine OR BuildMPDed)
 #        Engine/Executable (jamp.exe)
 
 if(BuildMPEngine)
+	set(MPEngineLibraries "${MPEngineAndDedLibraries}")
+	set(MPEngineIncludeDirectories "${MPEngineAndDedIncludeDirectories}")
+	set(MPEngineFiles "${MPEngineAndDedFiles}")
+	
 	#    Dependencies
+	
 
 	# OpenGL
 	find_package(OpenGL REQUIRED)
@@ -253,19 +258,25 @@ if(BuildMPEngine)
 		"${MPDir}/qcommon/INetProfile.h"
 		"${MPDir}/qcommon/exe_headers.h"
 		)
+	set(MPEngineFiles "${MPEngineFiles}" "${MPEngineCommonFiles}")
 	source_group("Common" "${MPEngineCommonFiles}")
 
 	# MP3 support
-	set(MPEngineMP3Files "${MPEngineFiles}" "${Mp3Files}")
+	set(MPEngineFiles "${MPEngineFiles}" "${Mp3Files}") # common code - defined in toplevel cmake project
 	source_group("MP3" "${Mp3Files}")
 
 	# todo: windows resources
 
 	add_executable("${MPBinary}" "${MPEngineFiles}")
+	set_target_properties("${MPBinary}" PROPERTIES COMPILE_DEFINITIONS "${MPEngineDefines}")
+	set_target_properties("${MPBinary}" PROPERTIES INCLUDE_DIRECTORIES "${MPEngineIncludeDirectories}")
 
 endif(BuildMPEngine)
 
 #        Dedicated Server (Engine) (jampded.exe)
 
 if(BuildMPDed)
+	add_executable("${MPDed}" "${MPDedFiles}")
+	set_target_properties("${MPDed}" PROPERTIES COMPILE_DEFINITIONS "${MPDedDefines}")
+	set_target_properties("${MPDed}" PROPERTIES INCLUDE_DIRECTORIES "${MPDedIncludeDirectories}")
 endif(BuildMPDed)
